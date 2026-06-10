@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, CheckCircle2 } from 'lucide-react'
+import { supabase } from '../lib/supabase'
 
 const STEPS = [
   {
@@ -48,6 +49,42 @@ export default function ProjectPage() {
   const [step, setStep]       = useState(0)
   const [answers, setAnswers] = useState({})
   const [done, setDone]       = useState(false)
+  const [sending, setSending] = useState(false)
+  const [sendErr, setSendErr] = useState(false)
+
+  async function submitForm() {
+    setSending(true)
+    setSendErr(false)
+    try {
+      const { data, error } = await supabase
+        .from('respostas_reciclagem')
+        .insert({
+          email,
+          separa_lixo:       answers.separa,
+          frequencia:        answers.frequencia,
+          coleta_comunidade: answers.comunidade,
+          motivacao:         answers.interesse,
+        })
+        .select('id')
+        .single()
+
+      if (error) throw error
+
+      const materiais = answers.materiais || []
+      if (materiais.length > 0) {
+        const { error: matErr } = await supabase
+          .from('materiais_reciclados')
+          .insert(materiais.map(m => ({ resposta_id: data.id, material: m })))
+        if (matErr) throw matErr
+      }
+
+      setDone(true)
+    } catch {
+      setSendErr(true)
+    } finally {
+      setSending(false)
+    }
+  }
 
   function submitEmail(e) {
     e.preventDefault()
@@ -79,7 +116,7 @@ export default function ProjectPage() {
 
   function next() {
     if (step < STEPS.length - 1) setStep(s => s + 1)
-    else setDone(true)
+    else submitForm()
   }
 
   return (
@@ -238,7 +275,7 @@ export default function ProjectPage() {
               ) : <span />}
 
               {/* Next */}
-              <button onClick={next} disabled={!canNext}
+              <button onClick={next} disabled={!canNext || sending}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 8,
                   padding: '10px 22px', borderRadius: 99,
@@ -246,14 +283,20 @@ export default function ProjectPage() {
                   border: `1px solid ${canNext ? 'rgba(74,222,128,0.32)' : 'rgba(255,255,255,0.07)'}`,
                   color: canNext ? '#bbf7d0' : 'rgba(255,255,255,0.18)',
                   fontSize: '0.875rem', fontWeight: 600,
-                  cursor: canNext ? 'pointer' : 'not-allowed',
+                  cursor: canNext && !sending ? 'pointer' : 'not-allowed',
                   backdropFilter: 'blur(8px)',
                   transition: 'all 0.35s cubic-bezier(.22,1,.36,1)',
                 }}>
-                {step < STEPS.length - 1 ? 'Próxima' : 'Enviar'}
-                <ArrowRight size={14} />
+                {step < STEPS.length - 1 ? 'Próxima' : sending ? 'Enviando...' : 'Enviar'}
+                {!sending && <ArrowRight size={14} />}
               </button>
             </div>
+
+            {sendErr && (
+              <p style={{ color: 'rgba(239,68,68,0.8)', fontSize: 12, marginTop: 12, textAlign: 'center' }}>
+                Erro ao enviar. Verifique sua conexão e tente novamente.
+              </p>
+            )}
 
           </div>
 
