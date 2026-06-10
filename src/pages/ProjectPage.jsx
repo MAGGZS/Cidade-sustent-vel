@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, CheckCircle2 } from 'lucide-react'
-import { supabase } from '../lib/supabase'
+
+const API = 'https://cidade-sustentavel-backend.onrender.com'
 
 const STEPS = [
   {
@@ -56,28 +57,19 @@ export default function ProjectPage() {
     setSending(true)
     setSendErr(false)
     try {
-      const { data, error } = await supabase
-        .from('respostas_reciclagem')
-        .insert({
+      const res = await fetch(`${API}/respostas`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           email,
           separa_lixo:       answers.separa,
           frequencia:        answers.frequencia,
           coleta_comunidade: answers.comunidade,
           motivacao:         answers.interesse,
-        })
-        .select('id')
-        .single()
-
-      if (error) throw error
-
-      const materiais = answers.materiais || []
-      if (materiais.length > 0) {
-        const { error: matErr } = await supabase
-          .from('materiais_reciclados')
-          .insert(materiais.map(m => ({ resposta_id: data.id, material: m })))
-        if (matErr) throw matErr
-      }
-
+          materiais:         answers.materiais || [],
+        }),
+      })
+      if (!res.ok) throw new Error()
       setDone(true)
     } catch {
       setSendErr(true)
@@ -145,12 +137,12 @@ export default function ProjectPage() {
         </button>
       </div>
 
-      <main className="relative z-10 w-full max-w-lg px-5">
+      <main className="relative z-10 w-full max-w-lg px-4 sm:px-5">
 
         {!emailOk ? (
           /* ── Email gate ── */
           <form onSubmit={submitEmail} className="w-full anim-fade-up"
-            style={{ ...frost, borderRadius: 32, padding: '2.5rem' }}>
+            style={{ ...frost, borderRadius: 28, padding: 'clamp(1.5rem, 5vw, 2.5rem)' }}>
 
             <div style={{ marginBottom: 28 }}>
               <p style={{ color: 'rgba(255,255,255,0.28)', fontSize: 11, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', marginBottom: 10 }}>Antes de começar</p>
@@ -205,7 +197,7 @@ export default function ProjectPage() {
           </form>
 
         ) : !done ? (
-          <div className="w-full anim-fade-up" style={{ ...frost, borderRadius: 32, padding: '2.5rem' }}>
+          <div className="w-full anim-fade-up" style={{ ...frost, borderRadius: 28, padding: 'clamp(1.5rem, 5vw, 2.5rem)' }}>
 
             {/* Progress dots + bar */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 36 }}>
@@ -303,7 +295,7 @@ export default function ProjectPage() {
         ) : (
 
           <div className="w-full anim-fade-up flex flex-col items-center gap-7 text-center"
-            style={{ ...frost, borderRadius: 32, padding: '3rem 2.25rem' }}>
+            style={{ ...frost, borderRadius: 28, padding: 'clamp(1.75rem, 5vw, 3rem) clamp(1.25rem, 4vw, 2.25rem)' }}>
 
             <div className="w-14 h-14 rounded-2xl flex items-center justify-center"
               style={{ background: 'rgba(74,222,128,0.12)', border: '1px solid rgba(74,222,128,0.20)' }}>
