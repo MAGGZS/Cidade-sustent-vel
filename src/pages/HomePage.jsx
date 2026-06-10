@@ -25,7 +25,7 @@ export default function HomePage() {
         style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E")` }} />
 
       {/* Content */}
-      <main className="relative z-10 w-full max-w-2xl mx-auto px-6 flex flex-col items-center gap-6 text-center">
+      <main className="relative z-10 w-full max-w-2xl mx-auto px-4 sm:px-6 flex flex-col items-center gap-5 sm:gap-6 text-center">
 
         {/* Badge */}
         <span className="anim-fade-up inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-semibold"
