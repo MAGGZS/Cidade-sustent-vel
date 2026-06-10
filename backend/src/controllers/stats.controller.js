@@ -1,55 +1,29 @@
 import { supabase } from '../lib/supabase.js'
 
-// GET /stats — resumo geral das respostas
 export async function getStats(req, res) {
   const [
-    { count: total },
-    { data: porSeparacao },
-    { data: porFrequencia },
-    { data: porComunidade },
-    { data: porMotivacao },
-    { data: porMaterial },
+    totalResult,
+    separacaoResult,
+    frequenciaResult,
+    comunidadeResult,
+    motivacaoResult,
+    materialResult,
   ] = await Promise.all([
     supabase.from('respostas_reciclagem').select('*', { count: 'exact', head: true }),
-
-    supabase.from('respostas_reciclagem')
-      .select('separa_lixo')
-      .then(({ data }) => ({
-        data: contarOcorrencias(data, 'separa_lixo')
-      })),
-
-    supabase.from('respostas_reciclagem')
-      .select('frequencia')
-      .then(({ data }) => ({
-        data: contarOcorrencias(data, 'frequencia')
-      })),
-
-    supabase.from('respostas_reciclagem')
-      .select('coleta_comunidade')
-      .then(({ data }) => ({
-        data: contarOcorrencias(data, 'coleta_comunidade')
-      })),
-
-    supabase.from('respostas_reciclagem')
-      .select('motivacao')
-      .then(({ data }) => ({
-        data: contarOcorrencias(data, 'motivacao')
-      })),
-
-    supabase.from('materiais_reciclados')
-      .select('material')
-      .then(({ data }) => ({
-        data: contarOcorrencias(data, 'material')
-      })),
+    supabase.from('respostas_reciclagem').select('separa_lixo'),
+    supabase.from('respostas_reciclagem').select('frequencia'),
+    supabase.from('respostas_reciclagem').select('coleta_comunidade'),
+    supabase.from('respostas_reciclagem').select('motivacao'),
+    supabase.from('materiais_reciclados').select('material'),
   ])
 
   return res.json({
-    total,
-    por_separacao:  porSeparacao,
-    por_frequencia: porFrequencia,
-    por_comunidade: porComunidade,
-    por_motivacao:  porMotivacao,
-    por_material:   porMaterial,
+    total:          totalResult.count,
+    por_separacao:  contarOcorrencias(separacaoResult.data,  'separa_lixo'),
+    por_frequencia: contarOcorrencias(frequenciaResult.data, 'frequencia'),
+    por_comunidade: contarOcorrencias(comunidadeResult.data, 'coleta_comunidade'),
+    por_motivacao:  contarOcorrencias(motivacaoResult.data,  'motivacao'),
+    por_material:   contarOcorrencias(materialResult.data,   'material'),
   })
 }
 
