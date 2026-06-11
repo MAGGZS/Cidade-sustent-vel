@@ -44,14 +44,14 @@ export default function TimelinePage() {
         style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E")` }} />
 
       {/* Back */}
-      <div className="fixed top-4 left-4 z-20">
+      <div className="fixed top-4 left-4 sm:top-6 sm:left-6 z-20">
         <button onClick={() => navigate(-1)} className="btn-ghost">
           <ArrowLeft size={13} /> Voltar
         </button>
       </div>
 
-      <main className="relative z-10 w-full max-w-3xl px-4 sm:px-6 flex flex-col items-center gap-12 sm:gap-16"
-        style={{ paddingTop: '6rem', paddingBottom: '5rem' }}>
+      <main className="relative z-10 w-full max-w-3xl flex flex-col items-center gap-10 sm:gap-14"
+        style={{ padding: 'clamp(4.5rem, 12vw, 6.5rem) clamp(1rem, 5vw, 1.5rem) clamp(3rem, 8vw, 5rem)' }}>
 
         {/* Hero */}
         <header className="text-center flex flex-col items-center gap-4 anim-fade-up">
@@ -108,7 +108,7 @@ export default function TimelinePage() {
           </div>
 
           {/* ── Mobile: coluna única com linha lateral ── */}
-          <div className="sm:hidden relative">
+          <div className="sm:hidden relative pl-2">
             {/* Linha vertical esquerda */}
             <div className="absolute left-5 top-0 bottom-0 w-px"
               style={{ background: 'linear-gradient(180deg,transparent,rgba(74,222,128,0.25) 4%,rgba(74,222,128,0.25) 96%,transparent)' }} />
@@ -116,7 +116,7 @@ export default function TimelinePage() {
             {STEPS.map(({ icon: Icon, step, title, desc, color }, i) => (
               <div key={step}
                 className={`anim-fade-up d-${Math.min((i + 1) * 100, 600)}`}
-                style={{ display: 'flex', alignItems: 'flex-start', gap: 16, marginBottom: 28, paddingLeft: 0 }}>
+                style={{ display: 'flex', alignItems: 'flex-start', gap: 14, marginBottom: 24, paddingLeft: 0 }}>
 
                 {/* Ícone */}
                 <div style={{ flexShrink: 0, width: 40, height: 40, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -139,12 +139,9 @@ export default function TimelinePage() {
         </section>
 
         {/* CTA */}
-        <div className="anim-fade-up flex flex-col sm:flex-row flex-wrap gap-3 justify-center w-full px-2">
-          <button onClick={() => navigate('/projeto')} className="btn-primary w-full sm:w-auto justify-center">
-            <ArrowLeft size={13} /> Fazer o questionário
-          </button>
+        <div className="anim-fade-up flex justify-center w-full">
           <button onClick={() => navigate('/')} className="btn-ghost w-full sm:w-auto justify-center">
-            Voltar ao início
+            <ArrowLeft size={13} /> Voltar ao início
           </button>
         </div>
 

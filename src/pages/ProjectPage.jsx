@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, ArrowRight, CheckCircle2 } from 'lucide-react'
+import { ArrowLeft, ArrowRight, CheckCircle2, XCircle } from 'lucide-react'
 
 const API = 'https://cidade-sustentavel-backend.onrender.com'
 
@@ -44,14 +44,16 @@ const frost = {
 
 export default function ProjectPage() {
   const navigate = useNavigate()
-  const [email, setEmail]     = useState('')
-  const [emailOk, setEmailOk] = useState(false)
+  const [email, setEmail]       = useState('')
+  const [emailOk, setEmailOk]   = useState(false)
   const [emailErr, setEmailErr] = useState(false)
-  const [step, setStep]       = useState(0)
-  const [answers, setAnswers] = useState({})
-  const [done, setDone]       = useState(false)
-  const [sending, setSending] = useState(false)
-  const [sendErr, setSendErr] = useState(false)
+  const [emailChecking, setEmailChecking] = useState(false)
+  const [alreadyDone, setAlreadyDone]     = useState(false)
+  const [step, setStep]         = useState(0)
+  const [answers, setAnswers]   = useState({})
+  const [done, setDone]         = useState(false)
+  const [sending, setSending]   = useState(false)
+  const [sendErr, setSendErr]   = useState(false)
 
   async function submitForm() {
     setSending(true)
@@ -78,13 +80,22 @@ export default function ProjectPage() {
     }
   }
 
-  function submitEmail(e) {
+  async function submitEmail(e) {
     e.preventDefault()
-    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setEmailErr(true); return }
+    setEmailChecking(true)
+    setEmailErr(false)
+    try {
+      const res  = await fetch(`${API}/respostas`)
+      const data = await res.json()
+      const jaRespondeu = Array.isArray(data) && data.some(r => r.email === email)
+      if (jaRespondeu) { setAlreadyDone(true) }
+      else { setEmailOk(true) }
+    } catch {
+      // falha silenciosa — deixa prosseguir
       setEmailOk(true)
-      setEmailErr(false)
-    } else {
-      setEmailErr(true)
+    } finally {
+      setEmailChecking(false)
     }
   }
 
@@ -112,7 +123,7 @@ export default function ProjectPage() {
   }
 
   return (
-    <div className="relative w-full min-h-screen flex flex-col items-center justify-center overflow-hidden">
+<div className="relative w-full min-h-[100svh] flex flex-col items-center justify-center">
 
       {/* Background */}
       <div className="fixed inset-0 z-0">
@@ -131,18 +142,49 @@ export default function ProjectPage() {
         style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E")` }} />
 
       {/* Back */}
-      <div className="fixed top-5 left-5 z-20">
+<div className="fixed top-4 left-4 sm:top-6 sm:left-6 z-20">
         <button onClick={() => navigate('/')} className="btn-ghost">
           <ArrowLeft size={13} /> Início
         </button>
       </div>
 
-      <main className="relative z-10 w-full max-w-lg px-4 sm:px-5">
+<main className="relative z-10 w-full max-w-lg mx-auto flex flex-col"
+        style={{ padding: 'clamp(5rem, 14vw, 7rem) clamp(1rem, 5vw, 1.5rem) clamp(2rem, 6vw, 3rem)' }}>
 
-        {!emailOk ? (
+        {alreadyDone ? (
+          /* ── Já respondeu ── */
+          <div className="w-full anim-fade-up flex flex-col items-center gap-6 text-center"
+            style={{ ...frost, borderRadius: 24, padding: 'clamp(1.5rem, 5vw, 2.75rem) clamp(1.25rem, 4vw, 2.25rem)' }}>
+            <div className="w-14 h-14 rounded-2xl flex items-center justify-center"
+              style={{ background: 'rgba(239,68,68,0.10)', border: '1px solid rgba(239,68,68,0.22)' }}>
+              <XCircle size={26} style={{ color: 'rgba(239,68,68,0.80)' }} />
+            </div>
+            <div className="flex flex-col gap-2">
+              <h2 style={{ color: '#fff', fontWeight: 900, fontSize: '1.4rem', letterSpacing: '-0.02em' }}>Já participou!</h2>
+              <p style={{ color: 'rgba(255,255,255,0.40)', fontSize: '0.85rem', lineHeight: 1.6, maxWidth: 280 }}>
+                Este e-mail já foi usado para responder o questionário. Cada e-mail só pode participar uma vez.
+              </p>
+            </div>
+            <div style={{ width: '100%', height: 1, background: 'rgba(255,255,255,0.07)' }} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%' }}>
+              <button onClick={() => { setAlreadyDone(false); setEmail('') }} style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                padding: '11px 22px', borderRadius: 99,
+                background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.10)',
+                color: 'rgba(255,255,255,0.55)', fontSize: '0.875rem', fontWeight: 500, cursor: 'pointer',
+              }}>
+                Usar outro e-mail
+              </button>
+              <button onClick={() => navigate('/timeline')} className="btn-primary">
+                Ver guia de reciclagem <ArrowRight size={13} />
+              </button>
+            </div>
+          </div>
+
+        ) : !emailOk ? (
           /* ── Email gate ── */
-          <form onSubmit={submitEmail} className="w-full anim-fade-up"
-            style={{ ...frost, borderRadius: 28, padding: 'clamp(1.5rem, 5vw, 2.5rem)' }}>
+          <form onSubmit={submitEmail} className="w-full anim-fade-up flex flex-col"
+            style={{ ...frost, borderRadius: 24, padding: 'clamp(1.25rem, 5vw, 2.25rem)' }}>
 
             <div style={{ marginBottom: 28 }}>
               <p style={{ color: 'rgba(255,255,255,0.28)', fontSize: 11, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', marginBottom: 10 }}>Antes de começar</p>
@@ -161,15 +203,10 @@ export default function ProjectPage() {
                 value={email}
                 onChange={e => { setEmail(e.target.value); setEmailErr(false) }}
                 style={{
-                  width: '100%',
-                  padding: '14px 18px',
-                  borderRadius: 14,
+                  width: '100%', padding: '14px 18px', borderRadius: 14,
                   background: 'rgba(255,255,255,0.05)',
                   border: `1px solid ${emailErr ? 'rgba(239,68,68,0.5)' : 'rgba(255,255,255,0.10)'}`,
-                  color: '#fff',
-                  fontSize: '0.9rem',
-                  outline: 'none',
-                  transition: 'border-color 0.3s',
+                  color: '#fff', fontSize: '0.9rem', outline: 'none', transition: 'border-color 0.3s',
                 }}
               />
             </div>
@@ -179,25 +216,25 @@ export default function ProjectPage() {
             )}
 
             <div style={{ marginTop: 28, display: 'flex', justifyContent: 'flex-end' }}>
-              <button type="submit"
+              <button type="submit" disabled={emailChecking}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 8,
                   padding: '10px 24px', borderRadius: 99,
-                  background: email ? 'rgba(74,222,128,0.16)' : 'rgba(255,255,255,0.05)',
-                  border: `1px solid ${email ? 'rgba(74,222,128,0.35)' : 'rgba(255,255,255,0.08)'}`,
-                  color: email ? '#bbf7d0' : 'rgba(255,255,255,0.20)',
+                  background: email && !emailChecking ? 'rgba(74,222,128,0.16)' : 'rgba(255,255,255,0.05)',
+                  border: `1px solid ${email && !emailChecking ? 'rgba(74,222,128,0.35)' : 'rgba(255,255,255,0.08)'}`,
+                  color: email && !emailChecking ? '#bbf7d0' : 'rgba(255,255,255,0.20)',
                   fontSize: '0.875rem', fontWeight: 600,
-                  cursor: 'pointer',
+                  cursor: emailChecking ? 'wait' : 'pointer',
                   transition: 'all 0.3s cubic-bezier(.22,1,.36,1)',
                 }}>
-                Continuar <ArrowRight size={14} />
+                {emailChecking ? 'Verificando...' : 'Continuar'} {!emailChecking && <ArrowRight size={14} />}
               </button>
             </div>
 
           </form>
 
         ) : !done ? (
-          <div className="w-full anim-fade-up" style={{ ...frost, borderRadius: 28, padding: 'clamp(1.5rem, 5vw, 2.5rem)' }}>
+          <div className="w-full anim-fade-up" style={{ ...frost, borderRadius: 24, padding: 'clamp(1.25rem, 5vw, 2.25rem)' }}>
 
             {/* Progress dots + bar */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 36 }}>
@@ -228,7 +265,7 @@ export default function ProjectPage() {
             </div>
 
             {/* Options */}
-            <div style={{ display: 'grid', gridTemplateColumns: current.multi ? '1fr 1fr' : '1fr', gap: 10 }}>
+            <div className="form-options-grid" style={{ gap: 10 }}>
               {current.options.map(opt => {
                 const isSelected = current.multi
                   ? (answer || []).includes(opt)
@@ -294,8 +331,8 @@ export default function ProjectPage() {
 
         ) : (
 
-          <div className="w-full anim-fade-up flex flex-col items-center gap-7 text-center"
-            style={{ ...frost, borderRadius: 28, padding: 'clamp(1.75rem, 5vw, 3rem) clamp(1.25rem, 4vw, 2.25rem)' }}>
+          <div className="w-full anim-fade-up flex flex-col items-center gap-6 text-center"
+            style={{ ...frost, borderRadius: 24, padding: 'clamp(1.5rem, 5vw, 2.75rem) clamp(1.25rem, 4vw, 2.25rem)' }}>
 
             <div className="w-14 h-14 rounded-2xl flex items-center justify-center"
               style={{ background: 'rgba(74,222,128,0.12)', border: '1px solid rgba(74,222,128,0.20)' }}>
